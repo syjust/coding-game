@@ -20,5 +20,16 @@ do{
     }
 }while($f!==false);
 
-/* Vous pouvez aussi effectuer votre traitement ici après avoir lu toutes les données */
+$line_count = array_shift($input);
+$product_name = array_shift($input);
+$price = null;
+
+foreach ($input as $value) {
+    list($p_name, $p_price) = explode(" ", $value);
+    if ($p_name == $product_name) {
+        if (is_null($price) || $p_price < $price) {
+            $price = $p_price;
+        }
+    }
+}
 ?>
