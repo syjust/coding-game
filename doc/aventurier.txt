@@ -1,0 +1,21 @@
+Objectif
+
+C’est bien connu, il est dangereux de partir seul à l’aventure sans équipement. Avant d’aller explorer de lointaines contrées, votre première épreuve en tant qu’aventurier consiste ainsi à dérober une épée dans une salle au trésor piégée, puisqu’aucun vieux sage n’a bien voulu vous en donner une.
+
+La salle au trésor est représentée par un quadrillage dont l’entrée se situe dans le coin supérieur gauche. L’épée se trouve dans le coin inférieur droit. Les cases sont soit des murs, soit des cases traversables, soit des cases piégées : le plancher s’effondre sous vos pieds quand vous marchez sur ces dernières. Heureusement, vous courez assez vite pour passer rapidement à la prochaine case de votre chemin et ne pas tomber avec le plancher, mais une fois que vous avez marché sur une telle case, elle devient infranchissable. Par conséquent, lorsque vous vous trouvez sur une case, vous pouvez donc vous déplacer sur l’une des 4 cases adjacentes du moment que ce soit une case traversable ou une case piégée sur laquelle vous n’êtes jamais passé.
+
+Votre but est d’aller de l’entrée de la salle jusqu’à l’épée, et ensuite de revenir vivant à l’entrée. Vous pouvez traverser chaque case piégée au plus une fois au cours de votre aller-retour. On vous demande également de minimiser le nombre de cases piégées traversées sur votre chemin.
+
+Indication : On attend un algorithme de complexité polynomiale dans le pire cas.
+
+
+Données
+
+Entrée
+
+Ligne 1 : un entier N compris entre 3 et 20 représentant la taille de la carte (une grille carrée de dimension NxN).
+Lignes 2 à N+1 : les lignes de la carte représentées par des chaînes de N caractères. Les caractères de la ligne sont soit # (mur), soit . (case traversable), soit ! (case piégée). Les cases de l’entrée et de l’épée, situées respectivement en haut à gauche et en bas à droite, seront toujours des cases traversables.
+
+Sortie
+
+Un entier, indiquant le nombre minimal de cases piégées à traverser pour pouvoir prendre l’épée et la ramener à l’entrée. S’il est possible d’atteindre l’épée mais pas de revenir vivant ensuite, renvoyez -1. S’il n’est pas possible d’atteindre l’épée, renvoyez -2.
