@@ -32,4 +32,5 @@ foreach ($input as $value) {
         }
     }
 }
+echo "$price\n";
 ?>
