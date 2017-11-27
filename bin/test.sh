@@ -28,6 +28,7 @@ sample_dir="sample/$sample"
 for input in $sample_dir/input*txt ; do
   output="${input//input/output}"
   [ -e $output ] || quit "'$input' input has no output sample !"
+  info "diff '$php' $output"
   diff <(cat $input | php $php) <(echo "`cat $output`")
   if [ $? -eq 0 ] ; then
     succ "'$output' is OK"
