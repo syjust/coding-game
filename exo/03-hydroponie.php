@@ -42,9 +42,11 @@ class Grid {
     public $rows = [];
 
     public function __construct($rows = array()) {
+        $rowCount = 0;
         foreach ($rows as $rowString) {
+            $rowCount++;
             $lastRow = $this->getLastRow();
-            $row = $this->addRow($rowString);
+            $row = $this->addRow($rowCount, $rowString);
             if ($lastRow) {
                 foreach($row->cells as $index => $cell) {
                     $lastRow->addNeighbours($index, $cell);
@@ -62,8 +64,8 @@ class Grid {
      * @author sylvain.just
      * @date 2017-11-26
      */
-    public function addRow($rowString = "") {
-        $row = new Row($rowString);
+    public function addRow($rowCount = 0, $rowString = "") {
+        $row = new Row($rowCount, $rowString);
         $this->rows[] = $row;
         return $row;
     }
@@ -141,7 +143,37 @@ class Row {
      */
     public $cells = array();
 
-    public function __construct($rowString = "") {
+    /**
+     * cols
+     *
+     * @var array
+     */
+    private static $cols = [
+        'A', 'B', 'C', 'D', 'E',
+        'F', 'G', 'H', 'I', 'J',
+        'K', 'L', 'M', 'N', 'O',
+        'P', 'Q', 'R', 'S', 'T',
+        'U', 'V', 'W', 'X', 'Y',
+        'Z'
+    ];
+    /**
+     * rowCount
+     *
+     * @var int
+     */
+    private $rowCount = 0;
+
+    /**
+     * __construct
+     *
+     * @param int $rowCount
+     * @param string $rowString
+     *
+     * @author sylvain.just
+     * @date 2017-12-05
+     */
+    public function __construct($rowCount = 0, $rowString = "") {
+        $this->rowCount = $rowCount;
         foreach(preg_split("//", $rowString) as $cellType) {
             $lastCell = $this->getLastCell();
             $cell = $this->addCell($cellType);
@@ -161,7 +193,8 @@ class Row {
      * @date 2017-11-26
      */
     public function addCell($cellType = ".") {
-        $cell = new Cell($cellType);
+        $position = self::$cols[count($this->cells)].$this->rowCount;
+        $cell = new Cell($position, $cellType);
         $this->cells[] = $cell;
         return $cell;
     }
@@ -215,6 +248,12 @@ class Cell {
     public $type = null;
 
     /**
+     * A1 position
+     *
+     * @var string
+     */
+    public $position = null;
+    /**
      * neighbours
      *
      * @var array
@@ -224,12 +263,14 @@ class Cell {
     /**
      * __construct
      *
+     * @param string $position
      * @param string $type
      *
      * @author sylvain.just
      * @date 2017-11-26
      */
-    public function __construct($type) {
+    public function __construct($position, $type) {
+        $this->position = $position;
         $this->setType($type);
     }
 
