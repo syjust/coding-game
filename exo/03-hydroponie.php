@@ -85,12 +85,34 @@ class Grid {
         }
         return null;
     }
-    public function toString() {
+    /**
+     * toString
+     *
+     * @param string $format
+     *
+     * @author sylvain.just
+     * @date 2017-12-05
+     */
+    public function toString($format = 'type') {
         $string = "";
         foreach($this->rows as $row) {
             foreach($row->cells as $cell) {
-                //$string .= $cell->getNeighboursCount();
-                $string .= $cell->type;
+                $part = "";
+                switch($format) {
+                    case 'type'   :
+                        $part = $cell->type;
+                        break;
+                    case 'ncount' :
+                        $part = $cell->getNeighboursCount();
+                        break;
+                    case 'a1' :
+                        $part = $cell->position;
+                        break;
+                }
+                if (empty($part)) {
+                    $part = "E";
+                }
+                $string .= $part;
             }
             $string .= "\n";
         }
