@@ -174,7 +174,7 @@ class Row {
      */
     public function __construct($rowCount = 0, $rowString = "") {
         $this->rowCount = $rowCount;
-        foreach(preg_split("//", $rowString) as $cellType) {
+        foreach(str_split($rowString) as $cellType) {
             $lastCell = $this->getLastCell();
             $cell = $this->addCell($cellType);
             if ($lastCell) {
