@@ -40,6 +40,7 @@ do {
     }
   }
   $i++;
+} while ($indexManager->next());
 
 /**
  * AdnParser
@@ -79,16 +80,15 @@ class AdnParser {
    * @param string $secondPart
    * @return bool
    */
-  private function matchAdn($fistPart, $secondPart) {
+  private function matchAdn($firstPart, $secondPart) {
     foreach(str_split($firstPart) as $idx => $firstAtome) {
       $secondAtome = $secondPart[$idx];
-      if (!$this->matchAtome($firstAtome, $secondAtom)) {
+      if (!$this->matchAtome($firstAtome, $secondAtome)) {
         return false;
       }
     }
     return true;
   }
-} while ($indexManager->next());
 
   /**
    * @param char $first
@@ -119,7 +119,8 @@ class AdnParser {
       $firstPart .= $part;
       $fp[] = $part;
     } while (strlen($firstPart) < $this->part_length);
-    $adn = implode($fp)."#".implode($combination);
+    $adn = implode(" ", $fp)."#".implode(" ", $combination);
+    return $adn;
   }
 
   /**
@@ -152,7 +153,7 @@ class IndexManager {
   public function __construct($colCount) {
     $this->colCount = $colCount;
     $this->maxIndex = $colCount-1;
-    for ($i = 0 ; $i < $colCount ; $i++) {
+    for ($i = 0 ; $i < $this->maxIndex ; $i++) {
         $this->indexes[] = 0;
     }
   }
@@ -163,7 +164,7 @@ class IndexManager {
    */
   public function next() {
     $ret = true;
-    for ($i = $this->colCount ; $i > 0 ; $i--) {
+    for ($i = $this->maxIndex ; $i >= 0 ; $i--) {
       /* increment here col by col and reinit when previous col is incremented */
       if ($this->indexes[$i] == $this->maxIndex) {
         if ($i == 0) {
