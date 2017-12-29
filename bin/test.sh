@@ -29,8 +29,15 @@ for input in $sample_dir/input*txt ; do
   output="${input//input/output}"
   [ -e $output ] || quit "'$input' input has no output sample !"
   info "diff '$php' $output"
-  diff <(cat $input | php $php) <(echo "`cat $output`")
-  if [ $? -eq 0 ] ; then
+  prg_out="`cat $input | php $php`"
+  expected_out="$(echo "`cat $output`")"
+  diff <(echo "$prg_out") <(echo "$expected_out")
+  out=$?
+  if [ $out -ne 0 -a $sample == "04-adn" ] ; then
+    diff <(echo "$prg_out") <(echo "$expected_out" | sed 's/^\([^#]*\)#\([^#]*\)$/\2#\1/')
+    out=$?
+  fi
+  if [ $out -eq 0 ] ; then
     succ "'$output' is OK"
   else
     err "'$output' is KO"
