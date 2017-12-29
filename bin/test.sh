@@ -20,6 +20,8 @@ else
   sample="$1"
 fi
 
+PHP_BIN="/usr/local/bin/php7"
+[ -x $PHP_BIN ] || quit "php binary ($PHP_BIN) not found"
 php="exo/$sample.php"
 sample_dir="sample/$sample"
 [ -d "$sample_dir" ] || quit "'$sample_dir' : sample not found"
@@ -29,7 +31,7 @@ for input in $sample_dir/input*txt ; do
   output="${input//input/output}"
   [ -e $output ] || quit "'$input' input has no output sample !"
   info "diff '$php' $output"
-  prg_out="`cat $input | php $php`"
+  prg_out="`cat $input | $PHP_BIN $php`"
   expected_out="$(echo "`cat $output`")"
   diff <(echo "$prg_out") <(echo "$expected_out")
   out=$?
