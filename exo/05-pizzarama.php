@@ -32,6 +32,8 @@ usort($stations, ['Station', 'compare']);
 $i = null;
 $j = null;
 $dist = 0;
+// todo: calc all dist possibles between all stations (maybe with an IndexManager) & get only shortests for go up and down
+// traiter la notion d'aller et retour par des stations differentes
 foreach ($stations as $station) {
   if (is_null($i)) {
     $i = $station;
@@ -43,7 +45,8 @@ foreach ($stations as $station) {
   $j = $station;
   $dist += $i->dist($j);
 }
-echo ((int)$dist)."\n";
+// todo: on ne revient pas par le meme chemin au retour : donc pas x2 !!!
+echo ((int)$dist*2)."\n";
 
 class Station {
   private $x = 0;
@@ -67,8 +70,7 @@ class Station {
       return 0;
     }
   }
-  // todo: implement dist with following algorithm
-  // sqrt(pow(xj-xi, 2)+pow(yj-yi, 2)+pow(zj-zi, 2));
+
   public function dist($station) {
     $x  = $station->x - $this->x;
     $y  = $station->y - $this->y;
@@ -77,6 +79,7 @@ class Station {
     $py = pow($y, 2);
     $pz = pow($z, 2);
     $dist = sqrt($px + $py + $pz);
+    //printf("dist between '%s' and '%s' : '%f'\n", $this, $station, $dist);
     return $dist;
   }
 }
