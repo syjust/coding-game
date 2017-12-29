@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL);
 /*******
  * default base for PHP to run in https://demo.isograd.com/runtest/runtest.php
  *
@@ -113,7 +114,7 @@ class AdnParser {
   public function format($combination) {
     $fp = [];
     $sp = [];
-    $fistPart = "";
+    $firstPart = "";
     do {
       $part = array_shift($combination);
       $firstPart .= $part;
@@ -153,7 +154,7 @@ class IndexManager {
   public function __construct($colCount) {
     $this->colCount = $colCount;
     $this->maxIndex = $colCount-1;
-    for ($i = 0 ; $i < $this->maxIndex ; $i++) {
+    for ($i = 0 ; $i < $this->colCount ; $i++) {
         $this->indexes[] = 0;
     }
   }

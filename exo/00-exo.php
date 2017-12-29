@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL);
 /*******
  * default base for PHP to run in https://demo.isograd.com/runtest/runtest.php
  *
