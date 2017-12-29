@@ -50,6 +50,10 @@ class Station {
   private $y = 0;
   private $z = 0;
 
+  public function __tostring() {
+    return sprintf("%s %s %s", $this->x, $this->y, $this->z);
+  }
+
   public function __construct($coord) {
     list($this->x, $this->y, $this->z) = explode(" ", $coord);
   }
@@ -66,9 +70,9 @@ class Station {
   // todo: implement dist with following algorithm
   // sqrt(pow(xj-xi, 2)+pow(yj-yi, 2)+pow(zj-zi, 2));
   public function dist($station) {
-    $x  = $this->x - $station->x;
-    $y  = $this->y - $station->y;
-    $z  = $this->z - $station->z;
+    $x  = $station->x - $this->x;
+    $y  = $station->y - $this->y;
+    $z  = $station->z - $this->z;
     $px = pow($x, 2);
     $py = pow($y, 2);
     $pz = pow($z, 2);
