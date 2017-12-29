@@ -27,6 +27,8 @@ $stations = [];
 foreach ($input as $coord) {
   $stations[] = new Station($coord);
 }
+usort($stations, ['Station', 'compare']);
+
 $i = null;
 $j = null;
 $dist = 0;
@@ -41,14 +43,9 @@ foreach ($stations as $station) {
   $j = $station;
   $dist += $i->dist($j);
 }
-// todo: round dist with one of following args
-// #PHP_ROUND_HALF_UP
-// #PHP_ROUND_HALF_DOWN
-// #PHP_ROUND_HALF_EVEN
-// #PHP_ROUND_HALF_ODD
-echo $dist."\n";
+echo ((int)$dist)."\n";
 
-class Station implements Comparable {
+class Station {
   private $x = 0;
   private $y = 0;
   private $z = 0;
@@ -57,13 +54,10 @@ class Station implements Comparable {
     list($this->x, $this->y, $this->z) = explode(" ", $coord);
   }
 
-  public function compareTo($station) {
-    if (!$station instanceof Station) {
-      throw new Exception("cannot compare something else than a station");
-    }
-    if ($this->y > $station->y) {
+  public static function compare(Station $first, Station $second) {
+    if ($first->y > $second->y) {
       return 1;
-    } else if ($this->y < $station->y) {
+    } else if ($first->y < $second->y) {
       return -1;
     } else {
       return 0;
@@ -72,6 +66,14 @@ class Station implements Comparable {
   // todo: implement dist with following algorithm
   // sqrt(pow(xj-xi, 2)+pow(yj-yi, 2)+pow(zj-zi, 2));
   public function dist($station) {
+    $x  = $this->x - $station->x;
+    $y  = $this->y - $station->y;
+    $z  = $this->z - $station->z;
+    $px = pow($x, 2);
+    $py = pow($y, 2);
+    $pz = pow($z, 2);
+    $dist = sqrt($px + $py + $pz);
+    return $dist;
   }
 }
 ?>
