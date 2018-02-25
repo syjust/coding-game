@@ -18,7 +18,7 @@ class Grid {
     /**
      * cells
      *
-     * @var array of Cells indexed by a1 notation
+     * @var array of Cells indexed by xy notation
      */
     public $cells = [];
 
@@ -77,7 +77,7 @@ class Grid {
     /**
      * getCell
      *
-     * @param string $coordinates as a1 notation
+     * @param string $coordinates as xy notation
      * @return Cell or null
      *
      * @author sylvain.just
@@ -98,6 +98,7 @@ class Grid {
      *   - type   for cell type
      *   - ncount for neighbours count
      *   - a1     for cell coordinates
+     *   - xy     for cell coordinates
      * @return string
      *
      * @author sylvain.just
@@ -116,7 +117,10 @@ class Grid {
                         $part = $cell->getNeighboursCount();
                         break;
                     case 'a1' :
-                        $part = $cell->coordinates;
+                        $part = $cell->getCoordinates('a1');
+                        break;
+                    case 'xy' :
+                        $part = $cell->getCoordinates('xy');
                         break;
                 }
                 if (empty($part)) {
@@ -144,7 +148,7 @@ class Grid {
     /**
      * getCellCountByType
      *
-     * @param mixed $type
+     * @param string $type
      *
      * @author Author sylvain.just
      * @date 2018-02-25
@@ -171,26 +175,6 @@ class Grid {
  * @date 2017-11-26
  */
 class Row {
-
-    /**
-     * cols
-     *
-     * @var array
-     */
-    private static $cols = [
-        'a', 'b', 'c', 'd', 'e',
-        'f', 'g', 'h', 'i', 'j',
-        'k', 'l', 'm', 'n', 'o',
-        'p', 'q', 'r', 's', 't',
-        'u', 'v', 'w', 'x', 'y',
-        'z',
-        'A', 'B', 'C', 'D', 'E',
-        'F', 'G', 'H', 'I', 'J',
-        'K', 'L', 'M', 'N', 'O',
-        'P', 'Q', 'R', 'S', 'T',
-        'U', 'V', 'W', 'X', 'Y',
-        'Z'
-    ];
 
     /**
      * grid
@@ -245,10 +229,10 @@ class Row {
      * @date 2017-11-26
      */
     public function addCell($cellType) {
-        $absciss       = self::$cols[count($this->cells)];
-        $ordinate      = $this->rowIndex;
-        $coordinates   = $absciss.$ordinate;
-        $cell          = new Cell($coordinates, $cellType);
+        $x             = count($this->cells);
+        $y             = $this->rowIndex;
+        $coordinates   = "$x $y";
+        $cell          = new Cell($x, $y, $cellType);
         $this->grid->cells[$coordinates] = $cell;
         $this->cells[] = $cell;
         return $cell;
@@ -299,6 +283,20 @@ class Row {
 class Cell {
 
     /**
+     * a1AbscissMap
+     *
+     * @var array
+     */
+    private static $a1AbscissMap = [
+        'A', 'B', 'C', 'D', 'E',
+        'F', 'G', 'H', 'I', 'J',
+        'K', 'L', 'M', 'N', 'O',
+        'P', 'Q', 'R', 'S', 'T',
+        'U', 'V', 'W', 'X', 'Y',
+        'Z'
+    ];
+
+    /**
      * directionsMap
      *
      * @var array as arrayMap
@@ -322,11 +320,18 @@ class Cell {
     public $type = null;
 
     /**
-     * A1 coordinates
+     * x absciss index
      *
-     * @var string
+     * @var int
      */
-    public $coordinates = null;
+    public $x;
+
+    /**
+     * y ordinate index
+     *
+     * @var int
+     */
+    public $y;
 
     /**
      * neighbours
@@ -344,21 +349,9 @@ class Cell {
      * @author sylvain.just
      * @date 2017-11-26
      */
-    public function __construct($coordinates, $type) {
-        $this->coordinates = $coordinates;
-        $this->setType($type);
-    }
-
-    /**
-     * setType
-     * possible types are
-     *
-     * @param string $type
-     *
-     * @author sylvain.just
-     * @date 2017-11-26
-     */
-    public function setType($type) {
+    public function __construct($x, $y, $type) {
+        $this->x    = $x;
+        $this->y    = $y;
         $this->type = $type;
     }
 
@@ -404,5 +397,31 @@ class Cell {
         return null;
     }
 
+    /**
+     * getCoordinates
+     *
+     * @param string $coordinatesType as a1 or xy
+     *
+     * @author sylvain.just
+     * @date 2018-02-25
+     */
+    public function getCoordinates($coordinatesType) {
+        $coordinates = null;
+        switch($coordinatesType) {
+            case 'a1' :
+                if (isset(self::$a1AbscissMap[$this->x])) {
+                    $coordinates = self::$a1AbscissMap[$this->x]."{$this->y}";
+                } else {
+                    throw new Exception(sprintf(
+                        "'%s' : absciss index exceed a1 absciss map count (%d > %d)",
+                        $coordinatesType, $this->x, count(self::$a1AbscissMap)
+                    ));
+                }
+                break;
+            case 'xy' : $coordinates = "{$this->x} {$this->y}" ; break;
+            default : throw new Exception("'$coordinatesType' : bad coordinates type");
+        }
+        return $coordinates;
+    }
 }
 ?>
