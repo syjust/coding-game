@@ -316,5 +316,20 @@ class Cell {
     public function getNeighboursCount() {
         return count($this->neighbours);
     }
+    /**
+     * getNeighbour
+     *
+     * @param string $direction
+     * @return Cell or null
+     *
+     * @author sylvain.just
+     * @date 2018-02-25
+     */
+    public function getNeighbour($direction) {
+        if (isset($this->neighbours[$direction])) {
+            return $this->neighbours[$direction];
+        }
+        return null;
+    }
 }
 ?>
