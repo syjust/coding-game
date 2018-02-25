@@ -25,18 +25,22 @@ class Grid {
     /**
      * __construct
      *
+     * @param string $ordonateDirection as N or S
      * @param array $rows of string
      *
      * @author sylvain.just
      * @date 2018-02-25
      */
-    public function __construct($rows = array()) {
+    public function __construct($ordonateDirection, $rows = array()) {
+        if (!in_array($ordonateDirection, ['N', 'S'])) {
+            throw new Exception("'$ordonateDirection' : bad ordonate Direction, please give me 'N' or 'S'.)");
+        }
         foreach ($rows as $rowString) {
             $lastRow = $this->getLastRow();
             $row = $this->addRow($rowString);
             if ($lastRow) {
                 foreach($row->cells as $cellIndex => $cell) {
-                    $lastRow->addNorthNeighbours($cellIndex, $cell);
+                    $lastRow->addRowNeigbours($ordonateDirection, $cellIndex, $cell);
                 }
             }
         }
@@ -239,7 +243,7 @@ class Row {
     }
 
     /**
-     * addNorthNeighbours
+     * addRowNeigbours
      *
      * @param int $cellIndex
      * @param Cell $cell
@@ -247,8 +251,13 @@ class Row {
      * @author sylvain.just
      * @date 2017-11-26
      */
-    public function addNorthNeighbours($cellIndex = 0, Cell $cell) {
-        foreach([$cellIndex-1 => 'NE', $cellIndex => 'N', $cellIndex+1 => 'NO'] as $idx => $direction) {
+    public function addRowNeigbours($direction, $cellIndex = 0, Cell $cell) {
+        $directionsMapIndex = [
+            $cellIndex-1 => $direction.'E',
+            $cellIndex => $direction,
+            $cellIndex+1 => $direction.'O'
+        ];
+        foreach($directionsMapIndex as $idx => $direction) {
             if (isset($this->cells[$idx])) {
                 $this->cells[$idx]->addNeighbour($direction, $cell);
             }
