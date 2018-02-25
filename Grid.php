@@ -185,7 +185,7 @@ class Row {
      *
      * @var Grid
      */
-    private $grid;
+    public $grid;
 
     /**
      * cells
@@ -199,7 +199,7 @@ class Row {
      *
      * @var int
      */
-    private $rowIndex;
+    public $rowIndex;
 
     /**
      * __construct
@@ -236,7 +236,7 @@ class Row {
         $x             = count($this->cells);
         $y             = $this->rowIndex;
         $coordinates   = "$x $y";
-        $cell          = new Cell($x, $y, $cellType);
+        $cell          = new Cell($this, $x, $y, $cellType);
         $this->grid->cells[$coordinates] = $cell;
         $this->cells[] = $cell;
         return $cell;
@@ -322,6 +322,12 @@ class Cell {
     ];
 
     /**
+     * row
+     *
+     * @var Row
+     */
+    public $row;
+    /**
      * type
      *
      * @var string
@@ -352,13 +358,16 @@ class Cell {
     /**
      * __construct
      *
-     * @param string $coordinates
+     * @param Row $row
+     * @param int $x
+     * @param int $y
      * @param string $type
      *
      * @author sylvain.just
      * @date 2017-11-26
      */
-    public function __construct($x, $y, $type) {
+    public function __construct(Row $row, $x, $y, $type) {
+        $this->row  = $row;
         $this->x    = $x;
         $this->y    = $y;
         $this->type = $type;
