@@ -16,6 +16,13 @@ class Grid {
     public $rows = [];
 
     /**
+     * cells
+     *
+     * @var array of Cells indexed by a1 notation
+     */
+    public $cells = [];
+
+    /**
      * __construct
      *
      * @param array $rows of string
@@ -24,11 +31,9 @@ class Grid {
      * @date 2018-02-25
      */
     public function __construct($rows = array()) {
-        $rowIndex = 0;
         foreach ($rows as $rowString) {
-            $rowIndex++;
             $lastRow = $this->getLastRow();
-            $row = $this->addRow($rowIndex, $rowString);
+            $row = $this->addRow($rowString);
             if ($lastRow) {
                 foreach($row->cells as $cellIndex => $cell) {
                     $lastRow->addNorthNeighbours($cellIndex, $cell);
@@ -40,16 +45,16 @@ class Grid {
     /**
      * addRow
      *
-     * @param int $rowIndex
      * @param string $rowString
      * @return Row added
      *
      * @author sylvain.just
      * @date 2017-11-26
      */
-    public function addRow($rowIndex, $rowString) {
-        $row = new Row($rowIndex, $rowString);
-        $this->rows[$rowIndex] = $row;
+    public function addRow($rowString) {
+        $rowIndex = count($this->rows);
+        $row = new Row($this, $rowIndex, $rowString);
+        $this->rows[] = $row;
         return $row;
     }
 
@@ -65,6 +70,22 @@ class Grid {
         $r_cnt = count($this->rows);
         if ($r_cnt > 0) {
             return $this->rows[$r_cnt-1];
+        }
+        return null;
+    }
+
+    /**
+     * getCell
+     *
+     * @param string $coordinates as a1 notation
+     * @return Cell or null
+     *
+     * @author sylvain.just
+     * @date 2018-02-25
+     */
+    public function getCell($coordinates) {
+        if (isset($this->cells[$coordinates])) {
+            return $this->cells[$coordinates];
         }
         return null;
     }
@@ -106,6 +127,18 @@ class Grid {
             $string .= "\n";
         }
         return $string;
+    }
+
+    /**
+     * __toString
+     *
+     * @return string
+     *
+     * @author sylvain.just
+     * @date 2018-02-25
+     */
+    public function __toString() {
+        return $this->toString('type');
     }
 
     /**
@@ -160,6 +193,13 @@ class Row {
     ];
 
     /**
+     * grid
+     *
+     * @var Grid
+     */
+    private $grid;
+
+    /**
      * cells
      *
      * @var array
@@ -171,18 +211,20 @@ class Row {
      *
      * @var int
      */
-    private $rowIndex = 0;
+    private $rowIndex;
 
     /**
      * __construct
      *
+     * @param Grid $grid
      * @param int $rowIndex
      * @param string $rowString
      *
      * @author sylvain.just
-     * @date 2017-12-05
+     * @date 2018-02-25
      */
-    public function __construct($rowIndex = 0, $rowString = "") {
+    public function __construct(Grid $grid, $rowIndex, $rowString) {
+        $this->grid = $grid;
         $this->rowIndex = $rowIndex;
         foreach(str_split($rowString) as $cellType) {
             $lastCell = $this->getLastCell();
@@ -202,12 +244,13 @@ class Row {
      * @author sylvain.just
      * @date 2017-11-26
      */
-    public function addCell($cellType = "") {
+    public function addCell($cellType) {
         $absciss       = self::$cols[count($this->cells)];
         $ordinate      = $this->rowIndex;
         $coordinates   = $absciss.$ordinate;
         $cell          = new Cell($coordinates, $cellType);
-        $this->cells[$coordinates] = $cell;
+        $this->grid->cells[$coordinates] = $cell;
+        $this->cells[] = $cell;
         return $cell;
     }
 
