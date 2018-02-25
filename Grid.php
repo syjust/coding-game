@@ -7,6 +7,7 @@
  * @date 2017-11-26
  */
 class Grid {
+
     /**
      * rows
      *
@@ -14,6 +15,14 @@ class Grid {
      */
     public $rows = [];
 
+    /**
+     * __construct
+     *
+     * @param array $rows of string
+     *
+     * @author sylvain.just
+     * @date 2018-02-25
+     */
     public function __construct($rows = array()) {
         $rowIndex = 0;
         foreach ($rows as $rowString) {
@@ -31,13 +40,14 @@ class Grid {
     /**
      * addRow
      *
+     * @param int $rowIndex
      * @param string $rowString
      * @return Row added
      *
      * @author sylvain.just
      * @date 2017-11-26
      */
-    public function addRow($rowIndex = 0, $rowString = "") {
+    public function addRow($rowIndex, $rowString) {
         $row = new Row($rowIndex, $rowString);
         $this->rows[$rowIndex] = $row;
         return $row;
@@ -58,10 +68,16 @@ class Grid {
         }
         return null;
     }
+
     /**
      * toString
+     * print grid as given type
      *
-     * @param string $format
+     * @param string $format as :
+     *   - type   for cell type
+     *   - ncount for neighbours count
+     *   - a1     for cell coordinates
+     * @return string
      *
      * @author sylvain.just
      * @date 2017-12-05
@@ -91,6 +107,7 @@ class Grid {
         }
         return $string;
     }
+
     /**
      * getCellCountByType
      *
@@ -110,6 +127,7 @@ class Grid {
         }
         return $count;
     }
+
 }
 
 /**
@@ -120,12 +138,6 @@ class Grid {
  * @date 2017-11-26
  */
 class Row {
-    /**
-     * cells
-     *
-     * @var array
-     */
-    public $cells = array();
 
     /**
      * cols
@@ -146,6 +158,14 @@ class Row {
         'U', 'V', 'W', 'X', 'Y',
         'Z'
     ];
+
+    /**
+     * cells
+     *
+     * @var array
+     */
+    public $cells = array();
+
     /**
      * rowIndex
      *
@@ -207,6 +227,7 @@ class Row {
             }
         }
     }
+
     /**
      * getLastCell
      *
@@ -222,6 +243,7 @@ class Row {
         }
         return null;
     }
+
 }
 
 /**
@@ -232,24 +254,7 @@ class Row {
  * @date 2017-11-26
  */
 class Cell {
-    /**
-     * type
-     *
-     * @var string
-     */
-    public $type = null;
-    /**
-     * A1 coordinates
-     *
-     * @var string
-     */
-    public $coordinates = null;
-    /**
-     * neighbours
-     *
-     * @var array
-     */
-    public $neighbours = array();
+
     /**
      * directionsMap
      *
@@ -265,6 +270,27 @@ class Cell {
         'SE' => 'NO',
         'E'  => 'O'
     ];
+
+    /**
+     * type
+     *
+     * @var string
+     */
+    public $type = null;
+
+    /**
+     * A1 coordinates
+     *
+     * @var string
+     */
+    public $coordinates = null;
+
+    /**
+     * neighbours
+     *
+     * @var array
+     */
+    public $neighbours = array();
 
     /**
      * __construct
@@ -292,6 +318,7 @@ class Cell {
     public function setType($type) {
         $this->type = $type;
     }
+
     /**
      * addNeighbour
      *
@@ -305,6 +332,7 @@ class Cell {
         $this->neighbours[$direction] = $cell;
         $cell->neighbours[self::$directionsMap[$direction]] = $this;
     }
+
     /**
      * getNeighboursCount
      *
@@ -316,6 +344,7 @@ class Cell {
     public function getNeighboursCount() {
         return count($this->neighbours);
     }
+
     /**
      * getNeighbour
      *
@@ -331,5 +360,6 @@ class Cell {
         }
         return null;
     }
+
 }
 ?>
