@@ -16,6 +16,13 @@ class Grid {
     public $rows = [];
 
     /**
+     * columns
+     *
+     * @var array of array of cells
+     */
+    public $columns = [];
+
+    /**
      * cells
      *
      * @var array of Cells indexed by xy notation
@@ -35,6 +42,8 @@ class Grid {
         if (!in_array($ordonateDirection, ['N', 'S'])) {
             throw new Exception("'$ordonateDirection' : bad ordonate Direction, please give me 'N' or 'S'.)");
         }
+
+        // init cells and rows
         foreach ($rows as $rowString) {
             $lastRow = $this->getLastRow();
             $row = $this->addRow($rowString);
@@ -42,6 +51,20 @@ class Grid {
                 foreach($row->cells as $cellIndex => $cell) {
                     $lastRow->addRowNeigbours($ordonateDirection, $cellIndex, $cell);
                 }
+            }
+        }
+
+        // populate columns
+        if (isset($this->rows[0])) {
+            foreach ($this->rows[0]->cells as $cell) {
+                $colIndex = count($this->columns);
+                $column = new Column($this, $colIndex);
+                $neighbour = $cell->getNeighbour($ordonateDirection);
+                while (!is_null($neighbour)) {
+                    $column->addCell($neighbour);
+                    $neighbour = $neighbour->getNeighbour($ordonateDirection);
+                }
+                $this->columns[] = $column;
             }
         }
     }
@@ -169,6 +192,46 @@ class Grid {
         return $count;
     }
 
+}
+
+/**
+ * Class: Column
+ *
+ *
+ * @author sylvain.just
+ * @date 2018-02-25
+ */
+class Column {
+    /**
+     * cells
+     *
+     * @var array of Cell
+     */
+    public $cells = [];
+
+    /**
+     * grid
+     *
+     * @var Grid
+     */
+    public $grid;
+
+    /**
+     * colIndex
+     *
+     * @var int
+     */
+    public $colIndex;
+
+    public function __construct(Grid $grid, $colIndex) {
+        $this->grid = $grid;
+        $this->colIndex = $colIndex;
+    }
+
+    public function addCell(Cell $cell) {
+        $this->cells[] = $cell;
+        $cell->column = $this;
+    }
 }
 
 /**
@@ -327,6 +390,14 @@ class Cell {
      * @var Row
      */
     public $row;
+
+    /**
+     * column
+     *
+     * @var Column
+     */
+    public $column;
+
     /**
      * type
      *
@@ -442,4 +513,5 @@ class Cell {
         return $coordinates;
     }
 }
+
 ?>
