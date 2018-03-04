@@ -266,31 +266,42 @@ class Network {
      * @param int $hotNodeIndex
      * @return int as min link count between 2 nodes
      *
-     * @todo pathBuilder implementation
      * @author sylvain.just
      * @date 2018-03-03
      */
     public function countMinLinkBetween(int $skynetIndex, int $hotNodeIndex) {
-        error_log("countMinLinkBetween(skynet:$skynetIndex, hotNode:$hotNodeIndex){");
         $skynetNode   = $this->getNode($skynetIndex);
         $path         = new Path($skynetNode);
         $pathes       = new PathBuilder($path, $hotNodeIndex);
+        $iteration    = 0;
+        error_log($pathes);
         while(!$pathes->isNodeFound()) {
-            if ($pathes->hasHotNodeInLastIndex()) {
-                $pathes->purgePathWithoutHotNodeInLastIndex();
+            $iteration++;
+            error_log("countMinLinkBetween(skynet:$skynetIndex, hotNode:$hotNodeIndex) - i:$iteration");
+            if ($pathes->hasHotLinkNearLastIndex()) {
+                $pathes->purgePathesWithoutHotLinksNearLastIndex();
             }
+            $somethingAddedInPath = false;
             foreach ($pathes as $idx => $path) {
                 $node = $path->last();
-                $somethingAddedInPath = false;
-                foreach ($node->links as $link) {
-                    $other = $link->other($node);
-                    $somethingAddedInPath |= $pathes->tryAddNodeInPath($idx, $other);
+                if (is_null($node)) {
+                    error_log("no last node found in $path");
+                } else {
+                    foreach ($node->links as $link) {
+                        $other = $link->other($node);
+                        $added = $pathes->tryAddNodeInPath($idx, $other);
+                        $somethingAddedInPath = $somethingAddedInPath || $added;
+                        error_log(sprintf("%s:%s", "tryAddNodeInPath($idx, $other):",$added?'true':'false'));
+                    }
+                    if ($somethingAddedInPath) {
+                        unset($pathes[$idx]);
+                    }
                 }
-                error_log($pathes);
-                if ($somethingAddedInPath) {
-                    # todo fix problem here (unset seems not work)
-                    unset($pathes[$idx]);
-                }
+            }
+            error_log($pathes);
+            if (!$somethingAddedInPath) {
+                error_log("there is no evolution for this iteration ($iteration)");
+                break;
             }
         }
         return $pathes->shortestCount();
@@ -309,6 +320,7 @@ class Network {
                 $this->computeHotNode($node);
             }
         }
+        error_log("computeHotNodes:".var_export(array_keys($this->hotNodes), true));
     }
 
     public function computeHotNode(Node $node) {
@@ -347,7 +359,6 @@ class Network {
             }
             
             // 2. destroy first hotlink (2 gateways for 1 node) on the skynet logic way (SN always go on the closer path to gateway)
-            // todo: implement this (finalize pathBuilder in countMinLinkBetween())
             if (!$linkDestroyed) {
                 error_log("gateway link not found from current skynetIndex ($skynetIndex) looping on hotNodes");
                 $hotNode = null;
@@ -427,8 +438,16 @@ class Path extends ArrayObject {
      * @date 2018-03-04
      */
     public function last() {
-        $idx = count($this)-1;
-        return isset($this[$idx]) ? $this[$idx] : null;
+        end($this);
+        return current($this);
+    }
+    public function __toString() {
+        $string = "Path:[";
+        foreach($this as $node) {
+            $string .= "$node,";
+        }
+        $string .= "]";
+        return $string;
     }
 }
 
@@ -486,16 +505,17 @@ class PathBuilder extends ArrayObject {
     }
 
     /**
-     * hasHotNodeInLastIndex
+     * hasHotLinkNearLastIndex
      *
      * @return boolean
      *
      * @author sylvain.just
      * @date 2018-03-04
      */
-    public function hasHotNodeInLastIndex() {
+    public function hasHotLinkNearLastIndex() {
         foreach($this as $path) {
-            if ($path->last()->isHotNode) {
+            $node = $path->last();
+            if (!is_null($node) && $node->countHotLinks() >= 1) {
                 return true;
             }
         }
@@ -503,15 +523,16 @@ class PathBuilder extends ArrayObject {
     }
 
     /**
-     * purgePathWithoutHotNodeInLastIndex
+     * purgePathesWithoutHotLinksNearLastIndex
      *
      *
      * @author sylvain.just
      * @date 2018-03-04
      */
-    public function purgePathWithoutHotNodeInLastIndex() {
+    public function purgePathesWithoutHotLinksNearLastIndex() {
         foreach($this as $idx => $path) {
-            if (!$path->last()->isHotNode) {
+            $node = $path->last();
+            if (!is_null($node) && $node->countHotLinks() < 1) {
                 unset($this[$idx]);
             }
         }
@@ -532,7 +553,7 @@ class PathBuilder extends ArrayObject {
      * @date 2018-03-04
      */
     public function tryAddNodeInPath($index, Node $node) {
-        if (!$node->isGateway && !array_key_exists($node->index, $path)) {
+        if (!$node->isGateway && !array_key_exists($node->index, $this[$index])) {
             $path = clone $this[$index];
             $path[$node->index] = $node;
             $this[] = $path;
