@@ -25,11 +25,11 @@ for ($i = 0; $i < $E; $i++)
     );
     $network->setGateway($EI);
 }
-$network->computeHotNodes();
 
 // game loop
 while (TRUE)
 {
+    $network->computeHotNodes();
     fscanf(STDIN, "%d",
         $SI // The index of the node on which the Skynet agent is positioned this turn
     );
@@ -324,12 +324,13 @@ class Network {
     }
 
     public function computeHotNode(Node $node) {
+        error_log("computeHotNode($node)");
         if ($node->countHotLinks() >= 2) {
             $node->isHotNode = true;
             $this->hotNodes[$node->index] = $node;
         } else {
-            if (isset($this->hodeNodes[$node->index])) {
-                unset($this->hodeNodes[$node->index]);
+            if (isset($this->hotNodes[$node->index])) {
+                unset($this->hotNodes[$node->index]);
             }
             $node->isHotNode = false;
         }
@@ -385,7 +386,6 @@ class Network {
                     foreach($hotNode->links as $link) {
                         if ($link->tryDestroy()) {
                             $linkDestroyed = true;
-                            $this->computeHotNode($hotNode);
                             break;
                         }
                     }
@@ -411,6 +411,7 @@ class Network {
 /**
  * Class: Path
  *
+ * @see ArrayObject
  *
  * @author sylvain.just
  * @date 2018-03-04
@@ -451,8 +452,21 @@ class Path extends ArrayObject {
     }
 }
 
+/**
+ * Class: PathBuilder
+ *
+ * @see ArrayObject
+ *
+ * @author sylvain.just
+ * @date 2018-03-06
+ */
 class PathBuilder extends ArrayObject {
 
+    /**
+     * nodeIndex
+     *
+     * @var int
+     */
     public $nodeIndex;
 
     /**
@@ -497,8 +511,10 @@ class PathBuilder extends ArrayObject {
     public function shortestCount() {
         $cnt = null;
         foreach($this as $path) {
-            if (count($path) < $cnt || is_null($cnt)) {
-                $cnt = count($path);
+            if (array_key_exists($this->nodeIndex, $path)) {
+                if (count($path) < $cnt || is_null($cnt)) {
+                    $cnt = count($path);
+                }
             }
         }
         return $cnt;
