@@ -6,6 +6,15 @@
 [ -d exo ] || quit "exo dir not found"
 [ -d doc ] || quit "doc dir not found"
 
+# get arguments
+PHP_ARGS=""
+while [ "x${1:0:1}" == "x-" ] ; do
+  case $1 in
+    -d|--debug) PHP_ARGS="-d xdebug.profiler_enable=On" ; shift ;;
+    *) quit "'$1' bad arg" ;;
+  esac
+done
+
 if [ -z $1 ] ; then
   info "please choose a sample :"
   select sample in `ls -1 sample/` ; do
@@ -31,7 +40,7 @@ for input in $sample_dir/input*txt ; do
   output="${input//input/output}"
   [ -e $output ] || quit "'$input' input has no output sample !"
   info "diff '$php' $output"
-  prg_out="`cat $input | $PHP_BIN $php`"
+  prg_out="`cat $input | $PHP_BIN $PHP_ARGS $php`"
   expected_out="$(echo "`cat $output`")"
   diff <(echo "$prg_out") <(echo "$expected_out")
   out=$?
