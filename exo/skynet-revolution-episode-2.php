@@ -121,18 +121,12 @@ class Link {
     }
     public function tryDestroy() {
         $ret = false;
-        error_log("trying link '$this'");
         if ($this->hasGateway()) {
             if (!$this->isBroken) {
                 $this->isBroken = true;
                 print "$this\n";
-                error_log("'$this' DESTROYED");
                 $ret = true;
-            } else {
-                error_log("'$this' already destroyed");
             }
-        } else {
-            error_log("'$this' no gateway found");
         }
         return $ret;
     }
@@ -274,7 +268,6 @@ class Network {
         $path         = new Path($skynetNode);
         $pathes       = new PathBuilder($path, $hotNodeIndex);
         $iteration    = 0;
-        error_log($pathes);
         while(!$pathes->isNodeFound()) {
             $iteration++;
             error_log("countMinLinkBetween(skynet:$skynetIndex, hotNode:$hotNodeIndex) - i:$iteration");
@@ -284,23 +277,19 @@ class Network {
             $somethingAddedInPath = false;
             foreach ($pathes as $idx => $path) {
                 $node = $path->last();
-                if (is_null($node)) {
-                    error_log("no last node found in $path");
-                } else {
+                if (!is_null($node)) {
                     foreach ($node->links as $link) {
                         $other = $link->other($node);
                         $added = $pathes->tryAddNodeInPath($idx, $other);
                         $somethingAddedInPath = $somethingAddedInPath || $added;
-                        error_log(sprintf("%s:%s", "tryAddNodeInPath($idx, $other):",$added?'true':'false'));
+                        //error_log(sprintf("%s:%s", "tryAddNodeInPath($idx, $other):",$added?'true':'false'));
                     }
                     if ($somethingAddedInPath) {
                         unset($pathes[$idx]);
                     }
                 }
             }
-            error_log($pathes);
             if (!$somethingAddedInPath) {
-                error_log("there is no evolution for this iteration ($iteration)");
                 break;
             }
         }
@@ -323,8 +312,16 @@ class Network {
         error_log("computeHotNodes:".var_export(array_keys($this->hotNodes), true));
     }
 
+    /**
+     * computeHotNode
+     *
+     * @param Node $node
+     *
+     * @author sylvain.just
+     * @date 2018-03-06
+     */
     public function computeHotNode(Node $node) {
-        error_log("computeHotNode($node)");
+        //error_log("computeHotNode($node)");
         if ($node->countHotLinks() >= 2) {
             $node->isHotNode = true;
             $this->hotNodes[$node->index] = $node;
@@ -450,6 +447,9 @@ class Path extends ArrayObject {
         $string .= "]";
         return $string;
     }
+    public function cnt() {
+        return count($this);
+    }
 }
 
 /**
@@ -509,15 +509,21 @@ class PathBuilder extends ArrayObject {
      * @date 2018-03-04
      */
     public function shortestCount() {
-        $cnt = null;
+        $shortestPath = null;
         foreach($this as $path) {
             if (array_key_exists($this->nodeIndex, $path)) {
-                if (count($path) < $cnt || is_null($cnt)) {
-                    $cnt = count($path);
+                if (is_null($shortestPath)) {
+                    $shortestPath = $path;
+                    continue;
+                }
+                if ($path->cnt() < $shortestPath->cnt()) {
+                    $shortestPath = $path;
                 }
             }
         }
-        return $cnt;
+        error_log("PathBuilder->shortestCount(): $shortestPath, {$shortestPath->cnt()}");
+        error_log($this);
+        return $shortestPath->cnt();
     }
 
     /**
