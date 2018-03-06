@@ -9,6 +9,7 @@ fscanf(STDIN, "%d %d %d",
     $L, // the number of links
     $E // the number of exit gateways
 );
+//error_log("$N $L $E");
 $network = new Network();
 for ($i = 0; $i < $L; $i++)
 {
@@ -16,6 +17,7 @@ for ($i = 0; $i < $L; $i++)
         $N1, // N1 and N2 defines a link between these nodes
         $N2
     );
+    //error_log("$N1 $N2");
     $network->addLink($N1, $N2);
 }
 for ($i = 0; $i < $E; $i++)
@@ -260,6 +262,7 @@ class Network {
      * @param int $hotNodeIndex
      * @return int as min link count between 2 nodes
      *
+     * @todo count path weight with hot nodes only (skynet will never jump on non hotNode)
      * @author sylvain.just
      * @date 2018-03-03
      */
@@ -268,28 +271,36 @@ class Network {
         $path         = new Path($skynetNode);
         $pathes       = new PathBuilder($path, $hotNodeIndex);
         $iteration    = 0;
+        error_log($pathes);
         while(!$pathes->isNodeFound()) {
             $iteration++;
             error_log("countMinLinkBetween(skynet:$skynetIndex, hotNode:$hotNodeIndex) - i:$iteration");
             if ($pathes->hasHotLinkNearLastIndex()) {
                 $pathes->purgePathesWithoutHotLinksNearLastIndex();
-            }
+            } // else add big weigth for previous iteration : no GW ?? why skynet goes here !!
             $somethingAddedInPath = false;
-            foreach ($pathes as $idx => $path) {
-                $node = $path->last();
-                if (!is_null($node)) {
-                    foreach ($node->links as $link) {
-                        $other = $link->other($node);
-                        $added = $pathes->tryAddNodeInPath($idx, $other);
-                        $somethingAddedInPath = $somethingAddedInPath || $added;
-                        //error_log(sprintf("%s:%s", "tryAddNodeInPath($idx, $other):",$added?'true':'false'));
-                    }
-                    if ($somethingAddedInPath) {
-                        unset($pathes[$idx]);
+            // loop on static index list (this list will growth during the loop)
+            $indexes = $pathes->indexes();
+            foreach ($indexes as $idx) {
+                if (isset($pathes[$idx])) {
+                    $path = $pathes[$idx];
+                    $node = $path->last();
+                    if (!is_null($node)) {
+                        foreach ($node->links as $link) {
+                            $other = $link->other($node);
+                            $added = $pathes->tryAddNodeInPath($idx, $other);
+                            $somethingAddedInPath = $somethingAddedInPath || $added;
+                            //error_log(sprintf("%s:%s", "tryAddNodeInPath($idx, $other):",$added?'true':'false'));
+                        }
+                        if ($somethingAddedInPath) {
+                            unset($pathes[$idx]);
+                        }
                     }
                 }
             }
             if (!$somethingAddedInPath) {
+                // maybe return 99 here
+                throw new Exception('nothing added in path : break (error)');
                 break;
             }
         }
@@ -522,7 +533,7 @@ class PathBuilder extends ArrayObject {
             }
         }
         error_log("PathBuilder->shortestCount(): $shortestPath, {$shortestPath->cnt()}");
-        error_log($this);
+        //error_log($this);
         return $shortestPath->cnt();
     }
 
@@ -562,12 +573,14 @@ class PathBuilder extends ArrayObject {
 
     /**
      * tryAddNodeInPath
+     * 
+     * when node is added : path is cloned & return true (idx will be removed after by caller)
      *
      * add node only if :
      * - is not a gateway
      * - is not already added in path
      *
-     * @param int $index
+     * @param int $index for Path to clone
      * @param Node $node
      * @return boolean (true if added)
      *
@@ -593,6 +606,9 @@ class PathBuilder extends ArrayObject {
             $string .= "]\n";
         }
         return $string;
+    }
+    public function indexes() {
+        return array_keys($this->getArrayCopy());
     }
 }
 ?>
