@@ -293,15 +293,14 @@ class Network {
                             //error_log(sprintf("%s:%s", "tryAddNodeInPath($idx, $other):",$added?'true':'false'));
                         }
                         if ($somethingAddedInPath) {
-                            unset($pathes[$idx]);
+                            $pathes->offsetUnset($idx);
                         }
                     }
                 }
             }
             if (!$somethingAddedInPath) {
-                // maybe return 99 here
-                throw new Exception('nothing added in path : break (error)');
-                break;
+                //throw new Exception('nothing added in path : break (error)');
+                return 999999;
             }
         }
         return $pathes->shortestCount();
@@ -563,10 +562,12 @@ class PathBuilder extends ArrayObject {
      * @date 2018-03-04
      */
     public function purgePathesWithoutHotLinksNearLastIndex() {
-        foreach($this as $idx => $path) {
+        $indexes = $this->indexes();
+        foreach($indexes as $idx) {
+            $path = $this[$idx];
             $node = $path->last();
             if (!is_null($node) && $node->countHotLinks() < 1) {
-                unset($this[$idx]);
+                $this->offsetUnset($idx);
             }
         }
     }
