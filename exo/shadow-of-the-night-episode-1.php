@@ -24,12 +24,28 @@ class Point extends Obj {
         return sprintf("%d %d\n", $this->x, $this->y);
     }
 }
+/**
+ * Interface: MoveInterface
+ *
+ *
+ * @author sylvain.just
+ * @date 2018-03-08
+ */
 interface MoveInterface {
     public function moveUp();
     public function moveDown();
     public function moveLeft();
     public function moveRight();
 }
+/**
+ * Class: CropController
+ *
+ * @see MoveInterface
+ * @see Grid
+ *
+ * @author sylvain.just
+ * @date 2018-03-08
+ */
 class CropController extends Grid implements MoveInterface {
     public $fromPoint;
     public $grid;
@@ -94,10 +110,24 @@ class Batman extends Point {
         $this->grid->copyGrid($crop);
     }
     public function gotoNext($bombDir) {
-        $x = $this->x;
-        $y = $this->y;
-        $xSum = $this->grid->width > 1  ? $this->grid->width / 2  : 1;
-        $ySum = $this->grid->height > 1 ? $this->grid->height / 2 : 1;
+        $x    = $this->x;
+        $y    = $this->y;
+        $xSum = 1;
+        $ySum = 1;
+        if ($this->grid->width > 1) {
+            if ($this->grid->width % 2 == 0) {
+                $xSum = $this->grid->width / 2;
+            } else {
+                $xSum = ($this->grid->width + 1) / 2;
+            }
+        }
+        if ($this->grid->height > 1) {
+            if ($this->grid->height % 2 == 0) {
+                $ySum = $this->grid->height / 2;
+            } else {
+                $ySum = ($this->grid->height + 1) / 2;
+            }
+        }
         foreach(str_split($bombDir) as $direction) {
             switch($direction) {
                 case 'D' : $y += $ySum; break;
@@ -106,7 +136,7 @@ class Batman extends Point {
                 case 'L' : $x -= $xSum; break;
             }
         }
-        $this->go((int)$x, (int)$y);
+        $this->go($x, $y);
     }
 
 }
