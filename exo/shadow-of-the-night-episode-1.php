@@ -3,24 +3,66 @@
  * Auto-generated code below aims at helping you parse
  * the standard input according to the problem statement.
  **/
-function debug($string) {
-    error_log(var_export($string, true));
+class Obj {
+    function debug($string) {
+        error_log(get_called_class()."::$string");
+    }
 }
-class Batman {
+class Point extends Obj {
     public $x;
     public $y;
-    public $grid;
-    public function __construct($x, $y, Grid $grid) {
-        debug("new Batman($x, $y)");
+    public function __construct($x, $y) {
         $this->go($x, $y);
-        $this->grid = $grid;
     }
     public function go($x, $y) {
+        $this->debug("go($x, $y)");
         $this->x = $x;
         $this->y = $y;
     }
+
     public function __toString() {
         return sprintf("%d %d\n", $this->x, $this->y);
+    }
+}
+class CropController extends Grid {
+    public $point;
+    public $grid;
+    public function __construct(Point $point, Grid $grid) {
+        $this->point = $point;
+        $this->grid = $grid;
+        parent::__construct(
+            $point->x, // x:      no left - no right
+            $point->y, // y:      no up - no down
+            1,         // width:  no left - no right
+            1          // height: no up - no down
+        );
+    }
+    public function moveUp() {
+        $this->debug(__FUNCTION__."()");
+        $this->y      = $this->grid->y;
+        $this->height = $this->grid->y - $this->y;
+    }
+    public function moveDown() {
+        $this->debug(__FUNCTION__."()");
+        $this->y      = $this->point->y + 1;
+        $this->height = $this->grid->height - ($this->point->y+1);
+    }
+    public function moveRight() {
+        $this->debug(__FUNCTION__."()");
+        $this->x      = $this->point->x + 1;
+        $this->width  = $this->grid->width - ($this->point->x+1);
+    }
+    public function moveLeft() {
+        $this->debug(__FUNCTION__."()");
+        $this->x      = $this->grid->x;
+        $this->width  = $this->grid->x - $this->point->x;
+    }
+}
+class Batman extends Point {
+    public $grid;
+    public function __construct($x, $y, Grid $grid) {
+        parent::__construct($x, $y);
+        $this->grid = $grid;
     }
 
     /**
@@ -32,108 +74,52 @@ class Batman {
      * @date 2018-02-25
      */
     public function cropGrid($bombDir) {
-        debug("cropGrid($bombDir)");
-        switch($bombDir) {
-            // up 
-            case 'U'   :
-                $this->grid->crop(
-                    $this->x,
-                    $this->grid->y,
-                    1,
-                    $this->y
-                );
-            break;
-            // down
-            case 'D'   :
-                $this->grid->crop(
-                    $this->x,
-                    $this->y+1,
-                    1,
-                    $this->grid->height-$this->y
-                );
-            break;
-            // right
-            case 'R'   :
-                $this->grid->crop(
-                    $this->x+1,
-                    $this->y,
-                    $this->grid->width-$this->x,
-                    1
-                );
-            break;
-            // left
-            case 'L'   :
-                $this->grid->crop(
-                    $this->grid->x,
-                    $this->y,
-                    $this->x,
-                    1
-                );
-            break;
-            // up-right
-            case 'UR'  :
-                $this->grid->crop(
-                    $this->x,
-                    $this->y,
-                    $this->grid->width-$this->x,
-                    $this->y
-                );
-            break;
-            // down-right
-            case 'DR'  :
-                $this->grid->crop(
-                    $this->x,
-                    $this->y+1,
-                    $this->grid->width-$this->x,
-                    $this->grid->height-$this->y
-                );
-            break;
-            // down-left
-            case 'DL'  :
-                $this->grid->crop(
-                    $this->x,
-                    $this->y+1,
-                    $this->grid->width-$this->x,
-                    $this->grid->height-$this->y
-                );
-            break;
-            // up-left
-            case 'UL'  :
-                $this->grid->crop(
-                    $this->grid->x,
-                    $this->grid->y,
-                    $this->grid->width-$this->x,
-                    $this->grid->height-$this->y
-                );
-            break;
+        $this->debug("cropGrid($bombDir)");
+        $crop = new CropController($this, $this->grid);
+        foreach(str_split($bombDir) as $direction) {
+            switch($direction) {
+                case 'U' : $crop->moveUp();    break;
+                case 'D' : $crop->moveDown();  break;
+                case 'R' : $crop->moveRight(); break;
+                case 'L' : $crop->moveLeft();  break;
+            }
         }
-        return $grid;
+        $this->grid->copyGrid($crop);
     }
-    public function gotoNext() {
-        $x = $this->grid->width > 2
-            ? (int)$this->grid->width/2 + $this->grid->x
-            : $this->grid->width + $this->grid->x;
-        $y = $this->grid->height > 2
-            ? (int)$this->grid->height/2 + $this->grid->y
-            : $this->grid->height + $this->grid->y;
-        $this->go($x, $y);
+    public function gotoNext($bombDir) {
+        $x = $this->x;
+        $y = $this->y;
+        $xSum = $this->grid->width > 1  ? $this->grid->width / 2  : 1;
+        $ySum = $this->grid->height > 1 ? $this->grid->height / 2 : 1;
+        foreach(str_split($bombDir) as $direction) {
+            switch($direction) {
+                case 'U' : $y -= $ySum; break;
+                case 'D' : $y += $ySum; break;
+                case 'R' : $x += $xSum; break;
+                case 'L' : $x -= $xSum; break;
+            }
+        }
+        $this->go((int)$x, (int)$y);
     }
 
 }
-class BatGrid {
+class Grid extends Obj {
     public $width  = 0;
     public $height = 0;
     public $x      = 0;
     public $y      = 0;
     public function __construct($x, $y, $width, $height) {
-        debug("new BatGrid($x, $y, $width, $height)");
         $this->crop($x, $y, $width, $height);
     }
     public function crop($x, $y, $width, $height) {
+        $this->debug("crop($x, $y, $width, $height)");
         $this->width = $width;
         $this->height = $height;
         $this->x = $x;
         $this->y = $y;
+    }
+    public function copyGrid(Grid $grid) {
+        $this->crop($grid->x, $grid->y, $grid->width, $grid->height);
     }
 }
 
@@ -141,7 +127,7 @@ fscanf(STDIN, "%d %d",
     $W, // width of the building.
     $H // height of the building.
 );
-$grid = new BatGrid(0, 0, $W, $H);
+$grid = new Grid(0, 0, $W, $H);
 fscanf(STDIN, "%d",
     $N // maximum number of turns before game over.
 );
@@ -157,8 +143,8 @@ while (TRUE)
     fscanf(STDIN, "%s",
         $bombDir // the direction of the bombs from batman's current location (U, UR, R, DR, D, DL, L or UL)
     );
-    $batman->cropGrid($bombdir);
-    $batman->gotoNext($bombdir);
+    $batman->cropGrid($bombDir);
+    $batman->gotoNext($bombDir);
 
     // Write an action using echo(). DON'T FORGET THE TRAILING \n
     // To debug (equivalent to var_dump): error_log(var_export($var, true));
