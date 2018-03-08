@@ -37,25 +37,34 @@ class CropController extends Grid {
             1          // height: no up - no down
         );
     }
+    /**
+     * done
+     */
     public function moveUp() {
         $this->debug(__FUNCTION__."()");
         $this->y      = $this->grid->y;
-        $this->height = $this->grid->y - $this->y;
+        $this->height = $this->point->y - $this->grid->y;
     }
+    /**
+     * done
+     */
+    public function moveRight() {
+        $this->debug(__FUNCTION__."()");
+        $this->x      = $this->point->x + 1;
+        $this->width  = $this->grid->width+$this->grid->x - ($this->point->x+1);
+    }
+    /**
+     * todo finish this part
+     */
     public function moveDown() {
         $this->debug(__FUNCTION__."()");
         $this->y      = $this->point->y + 1;
         $this->height = $this->grid->height - ($this->point->y+1);
     }
-    public function moveRight() {
-        $this->debug(__FUNCTION__."()");
-        $this->x      = $this->point->x + 1;
-        $this->width  = $this->grid->width - ($this->point->x+1);
-    }
     public function moveLeft() {
         $this->debug(__FUNCTION__."()");
         $this->x      = $this->grid->x;
-        $this->width  = $this->grid->x - $this->point->x;
+        $this->width  = $this->point->x - ($this->grid->x-1);
     }
 }
 class Batman extends Point {
@@ -93,8 +102,8 @@ class Batman extends Point {
         $ySum = $this->grid->height > 1 ? $this->grid->height / 2 : 1;
         foreach(str_split($bombDir) as $direction) {
             switch($direction) {
-                case 'U' : $y -= $ySum; break;
                 case 'D' : $y += $ySum; break;
+                case 'U' : $y -= $ySum; break;
                 case 'R' : $x += $xSum; break;
                 case 'L' : $x -= $xSum; break;
             }
