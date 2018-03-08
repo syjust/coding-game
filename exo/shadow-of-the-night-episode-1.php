@@ -24,47 +24,45 @@ class Point extends Obj {
         return sprintf("%d %d\n", $this->x, $this->y);
     }
 }
-class CropController extends Grid {
-    public $point;
+interface MoveInterface {
+    public function moveUp();
+    public function moveDown();
+    public function moveLeft();
+    public function moveRight();
+}
+class CropController extends Grid implements MoveInterface {
+    public $fromPoint;
     public $grid;
-    public function __construct(Point $point, Grid $grid) {
-        $this->point = $point;
+    public function __construct(Point $fromPoint, Grid $grid) {
+        $this->fromPoint = $fromPoint;
         $this->grid = $grid;
         parent::__construct(
-            $point->x, // x:      no left - no right
-            $point->y, // y:      no up - no down
+            $fromPoint->x, // x:      no left - no right
+            $fromPoint->y, // y:      no up - no down
             1,         // width:  no left - no right
             1          // height: no up - no down
         );
     }
-    /**
-     * done
-     */
     public function moveUp() {
         $this->debug(__FUNCTION__."()");
         $this->y      = $this->grid->y;
-        $this->height = $this->point->y - $this->grid->y;
+        $this->height = $this->fromPoint->y - $this->grid->y;
     }
-    /**
-     * done
-     */
     public function moveRight() {
         $this->debug(__FUNCTION__."()");
-        $this->x      = $this->point->x + 1;
-        $this->width  = $this->grid->width+$this->grid->x - ($this->point->x+1);
+        $this->x      = $this->fromPoint->x + 1;
+        $this->width  = ($this->grid->width + $this->grid->x) - ($this->fromPoint->x + 1);
     }
-    /**
-     * todo finish this part
-     */
     public function moveDown() {
         $this->debug(__FUNCTION__."()");
-        $this->y      = $this->point->y + 1;
-        $this->height = $this->grid->height - ($this->point->y+1);
+        $this->y      = $this->fromPoint->y + 1;
+        $this->height = ($this->grid->height + $this->grid->y) - ($this->fromPoint->y + 1);
     }
+
     public function moveLeft() {
         $this->debug(__FUNCTION__."()");
         $this->x      = $this->grid->x;
-        $this->width  = $this->point->x - ($this->grid->x-1);
+        $this->width  = $this->fromPoint->x - $this->grid->x;
     }
 }
 class Batman extends Point {
