@@ -4,23 +4,59 @@
  * the standard input according to the problem statement.
  **/
  
+/**
+ * Class: Obj
+ *
+ *
+ * @author sylvain.just
+ * @date 2018-03-10
+ */
 class Obj {
-    public function debug($mixed) {
-        $traces = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2);
-        $trace  = isset($traces[1]) ? $traces[1] : [];
-        $debug  = get_called_class();
-        $debug .= isset($trace['type']) ? $trace['type'] : '.';
-        $debug .= isset($trace['function']) ? $trace['function'].'()' : '()';
-        if (is_array($mixed)) {
-            $debug .= " : [";
-            foreach($mixed as $k=>$v) {
-                $debug .= "$k=>$v, ";
+    public $DEBUG = true;
+    public function getStringValue($mixed) {
+        $string = "";
+        if (is_object($mixed)) {
+            if ($method_exists($mixed, '__toString')) {
+                $string .= "o:$mixed";
+            } else {
+                $string .= "o:".get_class($mixed);
             }
-            $debug .= "]";
+        } else if (is_array($mixed)) {
+            foreach($mixed as $k=>$v) {
+                if (empty($string)) {
+                    $string .= "a:[$k=>".$this->getStringValue($v);
+                } else {
+                    $string .= ", $k=>".$this->getStringValue($v);
+                }
+            }
+            $string .= "]";
+        } else if (is_null($mixed)) {
+            $string = 'n:null';
+        } else if ($mixed === false) {
+            $string = 'b:false';
+        } else if ($mixed === true) {
+            $string = 'b:true';
+        } else if (empty($mixed)) {
+            $string = 'e:empty';
+        } else if (is_string($mixed)) {
+            $string = "s:'$mixed'";
+        } else if (is_int($mixed)) {
+            $string = "i:$mixed";
         } else {
-            $debug .= $mixed;
+            $string = "UNKNOWN:type:".gettype($mixed).",'$mixed'";
         }
-        error_log($debug);
+        return $string;
+    }
+    public function debug($mixed) {
+        if ($this->DEBUG) {
+            $traces = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2);
+            $trace  = isset($traces[1]) ? $traces[1] : [];
+            $debug  = get_called_class();
+            $debug .= isset($trace['type']) ? $trace['type'] : '.';
+            $debug .= isset($trace['function']) ? $trace['function'].'()' : '()';
+            $debug .= " : ".$this->getStringValue($mixed);
+            error_log($debug);
+        }
     }
     public function __toString() {
         return get_called_class();
@@ -52,7 +88,7 @@ class Player extends Obj {
 }
 
 class Game extends Obj {
-    public static $LEVELS = [
+    public $LEVELS = [
         '2'  => 2, 
         '3'  => 3, 
         '4'  => 4, 
@@ -75,7 +111,7 @@ class Game extends Obj {
     public $cards1     = [];
     public $cards2     = [];
 
-    public $set        = 0;
+    public $sets       = 0;
     public $gameWinner = 'PAT';
     public function __construct(Player $p1, Player $p2) {
         $this->player1 = $p1;
@@ -88,21 +124,37 @@ class Game extends Obj {
             if (empty($this->player1->cards) || empty($this->player1->cards)) {
                 return false;
             } else {
-                $this->cards1 = array_pop($this->player1->cards);
-                $this->cards2 = array_pop($this->player2->cards);
+                $this->cards1[] = array_shift($this->player1->cards);
+                $this->cards2[] = array_shift($this->player2->cards);
             }
         }
         return true;
     }
-    public function play() {
-        $this->set++;
+
+    /**
+     * playSet
+     *
+     * @return boolean true if someone win the set, false otherwise
+     * @todo fix 2 fights case (rule seem's misunderstood)
+     *
+     * @author sylvain.just
+     * @date 2018-03-10
+     */
+    public function playSet() {
+        $ret = false;
+        $this->sets++;
         $winner = $this->whoWinSet();
         while ($winner != 1 && $winner != 2) {
             if ($winner === 'fight') {
                 if ($this->pop(3)) {
-                    if ($this->pop(1)) {
-                        $winner = $this->whoWinSet();
-                    }
+                    //$winner = $this->whoWinSet();
+                    //if ($winner !== 'fight') {
+                        if ($this->pop(1)) {
+                            $winner = $this->whoWinSet();
+                        }
+                    //}
+                } else {
+                    break;
                 }
             } else {
                 if ($this->pop(1)) {
@@ -113,16 +165,22 @@ class Game extends Obj {
             }
         }
         
-        $player = $this->players[$winner];
-        $player->winCards($this->cards1);
-        $player->winCards($this->cards2);
+        $this->debug("set:{$this->sets}, winner:$winner");
+        if ($winner == 1 || $winner == 2) {
+            $ret = true;
+            $player = $this->players[$winner];
+            $player->winCards($this->cards1);
+            $player->winCards($this->cards2);
+        }
+        return $ret;
     }
     public function whoWinSet() {
         end($this->cards1);
         end($this->cards2);
         $card1 = current($this->cards1);
         $card2 = current($this->cards2);
-        if (!is_null($card1) && !is_null($card2)) {
+        $this->debug(['c1' => $card1, 'c2' => $card2]);
+        if (!empty($card1) && !empty($card2)) {
             if ($this->LEVELS[$card1] > $this->LEVELS[$card2]) {
                 return 1;
             } else if ($this->LEVELS[$card1] < $this->LEVELS[$card2]) {
@@ -132,6 +190,24 @@ class Game extends Obj {
             }
         }
         return false;
+    }
+    public function __toString() {
+        if (!empty($this->cards1) || !empty($this->cards2)) {
+            return 'PAT';
+        } else {
+            $winner = 'PAT';
+            if ($this->player1->hasCards()) {
+                $winner = $this->player1;
+            }
+            if ($this->player2->hasCards()) {
+                $winner = $this->player2;
+            }
+            if ($winner !== 'PAT') {
+                return $winner." ".$this->sets;
+            } else {
+                return $winner;
+            }
+        }
     }
 }
 
@@ -162,6 +238,9 @@ $p2->printCards();
 $game = new Game($p1, $p2);
 
 while ($p2->hasCards() && $p1->hasCards()) {
+    if (!$game->playSet()) {
+        break;
+    }
 }
 
 // Write an action using echo(). DON'T FORGET THE TRAILING \n
