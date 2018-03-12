@@ -36,7 +36,7 @@ sample_dir="sample/$sample"
 [ -d "$sample_dir" ] || quit "'$sample_dir' : sample not found"
 [ -e "$php" ] || quit "'$php' php file not found"
 
-for input in $sample_dir/input*txt ; do
+for input in `find $sample_dir -name "input*.txt" | grep -v debug` ; do
   output="${input//input/output}"
   [ -e $output ] || quit "'$input' input has no output sample !"
   info "diff '$php' $output"
