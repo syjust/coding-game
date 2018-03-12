@@ -16,7 +16,7 @@ class Obj {
     public function getStringValue($mixed) {
         $string = "";
         if (is_object($mixed)) {
-            if ($method_exists($mixed, '__toString')) {
+            if (method_exists($mixed, '__toString')) {
                 $string .= "o:$mixed";
             } else {
                 $string .= "o:".get_class($mixed);
@@ -80,7 +80,7 @@ class Player extends Obj {
         return (string)$this->index;
     }
     public function printCards() {
-        $this->debug($this->cards);
+        $this->debug(['player' => $this, 'cards' => $this->cards]);
     }
     public function hasCards() {
         return !empty($this->cards);
@@ -165,13 +165,15 @@ class Game extends Obj {
             }
         }
         
-        $this->debug("set:{$this->sets}, winner:$winner");
         if ($winner == 1 || $winner == 2) {
             $ret = true;
             $player = $this->players[$winner];
             $player->winCards($this->cards1);
             $player->winCards($this->cards2);
         }
+        $this->debug("set:{$this->sets}, winner:$winner");
+        $this->player1->printCards();
+        $this->player2->printCards();
         return $ret;
     }
     public function whoWinSet() {
@@ -179,17 +181,18 @@ class Game extends Obj {
         end($this->cards2);
         $card1 = current($this->cards1);
         $card2 = current($this->cards2);
-        $this->debug(['c1' => $card1, 'c2' => $card2]);
+        $ret = false;
         if (!empty($card1) && !empty($card2)) {
             if ($this->LEVELS[$card1] > $this->LEVELS[$card2]) {
-                return 1;
+                $ret = 1;
             } else if ($this->LEVELS[$card1] < $this->LEVELS[$card2]) {
-                return 2;
+                $ret = 2;
             } else {
-                return 'fight';
+                $ret = 'fight';
             }
         }
-        return false;
+        $this->debug(['c1' => $card1, 'c2' => $card2, 'ret' => $ret]);
+        return $ret;
     }
     public function __toString() {
         if (!empty($this->cards1) || !empty($this->cards2)) {
