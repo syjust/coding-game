@@ -3,9 +3,88 @@
  * Auto-generated code below aims at helping you parse
  * the standard input according to the problem statement.
  **/
+/**
+ * Class: Obj
+ *
+ *
+ * @author sylvain.just
+ * @date 2018-03-10
+ */
 class Obj {
-    function debug($string) {
-        error_log(get_called_class()."::$string");
+    public $DEBUG = false;
+    public function getTypeString($mixed) {
+        $string = "";
+        if (is_object($mixed)) {
+            $string = "o";
+        } else if (is_array($mixed)) {
+            $string = "a";
+        } else if (is_null($mixed)) {
+            $string = 'n';
+        } else if ($mixed === false || $mixed === true) {
+            $string = 'b';
+        } else if (empty($mixed)) {
+            $string = 'e';
+        } else if (is_string($mixed)) {
+            $string = "s";
+        } else if (is_int($mixed)) {
+            $string = "i$mixed";
+        } else {
+            $string = gettype($mixed);
+        }
+        return $string;
+    }
+    public function getStringValue($mixed, $displayType = false, $displayArrayKeys = false) {
+        $string = "";
+        $type   = $this->getTypeString($mixed);
+        if ($displayType) {
+            $string .= "$type:";
+        }
+        switch($type) {
+            case 'o' :
+                if (method_exists($mixed, '__toString')) {
+                    $string .= $mixed;
+                } else {
+                    $string .= get_class($mixed);
+                }
+            break;
+            case 'a' :
+                $cnt = 0;
+                foreach($mixed as $k=>$v) {
+                    if (!$cnt) {
+                        $string .= "[";
+                    } else {
+                        $string .= ", ";
+                    }
+                    if ($displayArrayKeys) {
+                        $string .= "$k=>";
+                    }
+                    $string .= $this->getStringValue($v, $displayType, $displayArrayKeys);
+                    $cnt++;
+                }
+                $string .= "]";
+            break;
+            case 'n' : $string .= 'NULL' ; break;
+            case 'b' : $string .= $mixed ? 'TRUE' : 'FALSE' ; break;
+            case 'e' : $string .= 'EMPTY' ; break;
+            case 's' : $string .= "'$mixed'" ; break;
+            case 'i' : $string .= $mixed ; break;
+            default  : $string .= $mixed ; break;
+        }
+        return $string;
+    }
+    public function debug($mixed, $displayType = false, $displayArrayKeys = false) {
+        if ($this->DEBUG) {
+            $traces = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2);
+            $trace  = isset($traces[1]) ? $traces[1] : [];
+            $debug  = get_called_class();
+            $debug .= isset($trace['type']) ? $trace['type'] : '.';
+            $debug .= isset($trace['function']) ? $trace['function'].'()' : '()';
+            $debug .= " : ".$this->getStringValue($mixed, $displayType, $displayArrayKeys);
+            error_log($debug);
+        }
+    }
+    public function __toString() {
+        return get_called_class();
     }
 }
 class Point extends Obj {
