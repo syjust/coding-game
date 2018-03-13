@@ -178,46 +178,60 @@ class Batman extends Point {
     public function cropGrid($bombDir) {
         $this->debug("cropGrid($bombDir)");
         $crop = new CropController($this);
-        foreach(str_split($bombDir) as $direction) {
-            switch($direction) {
-                case 'U' : $crop->moveUp();    break;
-                case 'D' : $crop->moveDown();  break;
-                case 'R' : $crop->moveRight(); break;
-                case 'L' : $crop->moveLeft();  break;
-            }
-        }
+        $this->move($crop);
         $this->grid->copyGrid($crop);
     }
+
     public function gotoNext($bombDir) {
-        $x    = $this->x;
-        $y    = $this->y;
-        $xSum = 1;
-        $ySum = 1;
+        $next = new NextPoint($this);
+        $this->move($next, $bombDir);
+        $this->goPoint($next);
+    }
+
+    public function move(MoveInterface $interface, $bombDir) {
+        foreach(str_split($bombDir) as $direction) {
+            switch($direction) {
+                case 'D' : $interface->moveDown();  break;
+                case 'U' : $interface->moveUp();    break;
+                case 'R' : $interface->moveRight(); break;
+                case 'L' : $interface->moveLeft();  break;
+            }
+        }
+    }
+
+}
+class NextPoint extends Point implements MoveInterface {
+    public $xSum = 1;
+    public $ySum = 1;
+    public function __construct(Point $point) {
+        $this->goPoint($point);
         if ($this->grid->width > 1) {
             if ($this->grid->width % 2 == 0) {
-                $xSum = $this->grid->width / 2;
+                $this->xSum = $this->grid->width / 2;
             } else {
-                $xSum = ($this->grid->width + 1) / 2;
+                $this->xSum = ($this->grid->width + 1) / 2;
             }
         }
         if ($this->grid->height > 1) {
             if ($this->grid->height % 2 == 0) {
-                $ySum = $this->grid->height / 2;
+                $this->ySum = $this->grid->height / 2;
             } else {
-                $ySum = ($this->grid->height + 1) / 2;
+                $this->ySum = ($this->grid->height + 1) / 2;
             }
         }
-        foreach(str_split($bombDir) as $direction) {
-            switch($direction) {
-                case 'D' : $y += $ySum; break;
-                case 'U' : $y -= $ySum; break;
-                case 'R' : $x += $xSum; break;
-                case 'L' : $x -= $xSum; break;
-            }
-        }
-        $this->go($x, $y);
     }
-
+    public function moveDown() {
+        $this->y += $this->ySum;
+    }
+    public function moveUp() {
+        $this->y -= $this->ySum;
+    }
+    public function moveRight() {
+        $this->x += $this->xSum;
+    }
+    public function moveLeft() {
+        $this->x -= $this->xSum;
+    }
 }
 class Grid extends Obj {
     public $width  = 0;
