@@ -2,6 +2,17 @@
 /**
  * Auto-generated code below aims at helping you parse
  * the standard input according to the problem statement.
+ *
+ * La structure se présente comme un labyrinthe rectangulaire composé de cellules. Une fois dans le labyrinthe,
+ * Kirk peut aller dans les directions suivantes: haut, bas, gauche et droite (UP, DOWN, LEFT, RIGHT).
+ *
+ *
+ * Format du labyrinthe
+ * Le labyrinthe est fourni en entrée sous forme ASCII. Le caractère # représente un mur, le caractère.
+ * représente un espace vide, la lettre T représente votre position de départ,
+ * la lettre C représente la salle de commande
+ * et le caractère ? représente une cellule que vous n'avez pas encore scannée.
+ *
  **/
 
 fscanf(STDIN, "%d %d %d",
