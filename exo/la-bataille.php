@@ -13,48 +13,74 @@
  */
 class Obj {
     public $DEBUG = true;
-    public function getStringValue($mixed) {
+    public function getTypeString($mixed) {
         $string = "";
         if (is_object($mixed)) {
-            if (method_exists($mixed, '__toString')) {
-                $string .= "o:$mixed";
-            } else {
-                $string .= "o:".get_class($mixed);
-            }
+            $string = "o";
         } else if (is_array($mixed)) {
-            foreach($mixed as $k=>$v) {
-                if (empty($string)) {
-                    $string .= "a:[$k=>".$this->getStringValue($v);
-                } else {
-                    $string .= ", $k=>".$this->getStringValue($v);
-                }
-            }
-            $string .= "]";
+            $string = "a";
         } else if (is_null($mixed)) {
-            $string = 'n:null';
-        } else if ($mixed === false) {
-            $string = 'b:false';
-        } else if ($mixed === true) {
-            $string = 'b:true';
+            $string = 'n';
+        } else if ($mixed === false || $mixed === true) {
+            $string = 'b';
         } else if (empty($mixed)) {
-            $string = 'e:empty';
+            $string = 'e';
         } else if (is_string($mixed)) {
-            $string = "s:'$mixed'";
+            $string = "s";
         } else if (is_int($mixed)) {
-            $string = "i:$mixed";
+            $string = "i$mixed";
         } else {
-            $string = "UNKNOWN:type:".gettype($mixed).",'$mixed'";
+            $string = gettype($mixed);
         }
         return $string;
     }
-    public function debug($mixed) {
+    public function getStringValue($mixed, $displayType = false, $displayArrayKeys = false) {
+        $string = "";
+        $type   = $this->getTypeString($mixed);
+        if ($displayType) {
+            $string .= "$type:";
+        }
+        switch($type) {
+            case 'o' :
+                if (method_exists($mixed, '__toString')) {
+                    $string .= $mixed;
+                } else {
+                    $string .= get_class($mixed);
+                }
+            break;
+            case 'a' :
+                $cnt = 0;
+                foreach($mixed as $k=>$v) {
+                    if (!$cnt) {
+                        $string .= "[";
+                    } else {
+                        $string .= ", ";
+                    }
+                    if ($displayArrayKeys) {
+                        $string .= "$k=>";
+                    }
+                    $string .= $this->getStringValue($v, $displayType, $displayArrayKeys);
+                    $cnt++;
+                }
+                $string .= "]";
+            break;
+            case 'n' : $string .= 'NULL' ; break;
+            case 'b' : $string .= $mixed ? 'TRUE' : 'FALSE' ; break;
+            case 'e' : $string .= 'EMPTY' ; break;
+            case 's' : $string .= "'$mixed'" ; break;
+            case 'i' : $string .= $mixed ; break;
+            default  : $string .= $mixed ; break;
+        }
+        return $string;
+    }
+    public function debug($mixed, $displayType = false, $displayArrayKeys = false) {
         if ($this->DEBUG) {
             $traces = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2);
             $trace  = isset($traces[1]) ? $traces[1] : [];
             $debug  = get_called_class();
             $debug .= isset($trace['type']) ? $trace['type'] : '.';
             $debug .= isset($trace['function']) ? $trace['function'].'()' : '()';
-            $debug .= " : ".$this->getStringValue($mixed);
+            $debug .= " : ".$this->getStringValue($mixed, $displayType, $displayArrayKeys);
             error_log($debug);
         }
     }
@@ -79,8 +105,11 @@ class Player extends Obj {
     public function __toString() {
         return (string)$this->index;
     }
+    public function orderCards() {
+        $this->cards = array_reverse($this->cards);
+    }
     public function printCards() {
-        $this->debug(['player' => $this, 'cards' => $this->cards]);
+        $this->debug([ "player$this", 'cards' => $this->cards]);
     }
     public function hasCards() {
         return !empty($this->cards);
@@ -191,7 +220,7 @@ class Game extends Obj {
                 $ret = 'fight';
             }
         }
-        $this->debug(['c1' => $card1, 'c2' => $card2, 'ret' => $ret]);
+        $this->debug(['c1' => $card1, 'c2' => $card2, 'ret' => $ret], false, true);
         return $ret;
     }
     public function __toString() {
@@ -236,6 +265,8 @@ for ($i = 0; $i < $m; $i++)
     );
     $p2->addCard($cardp2);
 }
+#$p1->orderCards();
+#$p2->orderCards();
 $p1->printCards();
 $p2->printCards();
 $game = new Game($p1, $p2);
