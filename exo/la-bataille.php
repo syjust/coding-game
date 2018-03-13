@@ -12,7 +12,7 @@
  * @date 2018-03-10
  */
 class Obj {
-    public $DEBUG = true;
+    public $DEBUG = false;
     public function getTypeString($mixed) {
         $string = "";
         if (is_object($mixed)) {
@@ -95,7 +95,7 @@ class Player extends Obj {
         $this->index = $index;
     }
     public function winCards(array &$cards) {
-        while($card = array_pop($cards)) {
+        while($card = array_shift($cards)) {
             $this->cards[] = $card;
         }
     }
