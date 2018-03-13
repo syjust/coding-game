@@ -90,13 +90,19 @@ class Obj {
 class Point extends Obj {
     public $x;
     public $y;
-    public function __construct($x, $y) {
+    public $grid;
+    public function __construct($x, $y, Grid $grid) {
         $this->go($x, $y);
+        $this->grid = $grid;
     }
+
     public function go($x, $y) {
         $this->debug("go($x, $y)");
         $this->x = $x;
         $this->y = $y;
+    }
+    public function goPoint(Point $point) {
+        $this->go($point->x, $point->y);
     }
 
     public function __toString() {
@@ -128,9 +134,9 @@ interface MoveInterface {
 class CropController extends Grid implements MoveInterface {
     public $fromPoint;
     public $grid;
-    public function __construct(Point $fromPoint, Grid $grid) {
+    public function __construct(Point $fromPoint) {
         $this->fromPoint = $fromPoint;
-        $this->grid = $grid;
+        $this->grid = $fromPoint->grid;
         parent::__construct(
             $fromPoint->x, // x:      no left - no right
             $fromPoint->y, // y:      no up - no down
@@ -161,12 +167,6 @@ class CropController extends Grid implements MoveInterface {
     }
 }
 class Batman extends Point {
-    public $grid;
-    public function __construct($x, $y, Grid $grid) {
-        parent::__construct($x, $y);
-        $this->grid = $grid;
-    }
-
     /**
      * cropGrid
      *
@@ -177,7 +177,7 @@ class Batman extends Point {
      */
     public function cropGrid($bombDir) {
         $this->debug("cropGrid($bombDir)");
-        $crop = new CropController($this, $this->grid);
+        $crop = new CropController($this);
         foreach(str_split($bombDir) as $direction) {
             switch($direction) {
                 case 'U' : $crop->moveUp();    break;
