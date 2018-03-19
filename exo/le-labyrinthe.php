@@ -167,6 +167,13 @@ class SimpleGrid extends Obj {
     public function isEndFound() {
         return !is_null($this->endPoint);
     }
+    public function endIsInPath() {
+        if ($this->isEndFound()) {
+            return $this->path->isInPath($this->endPoint->x, $this->endPoint->y);
+        } else {
+            return false;
+        }
+    }
     public function __toString() {
         $string = "";
         foreach ($this->rows as $row) {
@@ -199,8 +206,14 @@ class SimpleGrid extends Obj {
         }
         if (isset($this->rows[$x]) && isset($this->rows[$x][$y])) {
             $this->debug("$direction?$x,$y:({$this->rows[$x][$y]})");
-            if ($this->rows[$x][$y] !== '#' && !$this->path->isInPath($x, $y)) {
-                $ret = true;
+            if ($this->endIsInPath()) {
+                if (!preg_match("/[#C]/", $this->rows[$x][$y]) && !$this->path->isInPath($x, $y)) {
+                    $ret = true;
+                }
+            } else {
+                if (!preg_match("/[#T]/", $this->rows[$x][$y]) && !$this->path->isInPath($x, $y)) {
+                    $ret = true;
+                }
             }
         }
         return $ret;
@@ -297,7 +310,7 @@ while (TRUE)
     // To debug (equivalent to var_dump): error_log(var_export($var, true));
 
     if ($grid->isEndFound()) {
-        if ($path->isInPath($grid->endPoint->x, $grid->endPoint->y)) {
+        if ($grid->endIsInPath()) {
             $grid->goToEnd($kirk);
         } else {
             $grid->returnStart($kirk);
