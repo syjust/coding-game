@@ -135,7 +135,7 @@ class Point extends Obj {
         return $move;
     }
 }
-class SimpleGrid extends Obj {
+class Grid extends Obj {
     public $directions = [
         'L' => 'LEFT',
         'R' => 'RIGHT',
@@ -146,11 +146,36 @@ class SimpleGrid extends Obj {
     public $startPoint = null;
     public $endPoint   = null;
     public $path       = null;
-    public function __construct(Path $path) {
+    public $COLS       = [
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+        'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+        'U', 'V', 'W', 'X', 'Y', 'Z'
+    ];
+    public function __construct(Path $path, $colCount = 0) {
+        $title = "";
+        for ($i = 0 ; $i < $colCount ; $i++) {
+            if (isset($this->COLS[$i])) {
+                $title .= $this->COLS[$i];
+            } else {
+                $title .= $this->COLS[$i%count($this->COLS)];
+            }
+        }
+        $this->debug($title);
         $this->path = $path;
     }
     public function addRow($string) {
-        $this->debug($string);
+        $cnt = count($this->rows);
+        if ($cnt < 10) {
+            $space = '   ';
+        } else if ($cnt < 100) {
+            $space = '  ';
+        } else if ($cnt < 1000) {
+            $space = ' ';
+        } else {
+            $space = '';
+        }
+        $this->debug($space.$cnt.":".$string);
         $row = str_split($string);
         if (preg_match('/CT/', $string)) {
             for ($i = 0 ; $i < count($row) ; $i++) {
@@ -204,14 +229,15 @@ class SimpleGrid extends Obj {
                 throw new Exception("bad direction '$direction'");
             break;
         }
-        if (isset($this->rows[$x]) && isset($this->rows[$x][$y])) {
-            $this->debug("$direction?$x,$y:({$this->rows[$x][$y]})");
+        if (isset($this->rows[$y]) && isset($this->rows[$y][$x])) {
+            $point =  $this->rows[$y][$x];
+            $this->debug("$direction?$x,$y:($point)");
             if ($this->endIsInPath()) {
-                if (!preg_match("/[#C]/", $this->rows[$x][$y]) && !$this->path->isInPath($x, $y)) {
+                if (!preg_match("/[#C]/", $point) && !$this->path->isInPath($x, $y)) {
                     $ret = true;
                 }
             } else {
-                if (!preg_match("/[#T]/", $this->rows[$x][$y]) && !$this->path->isInPath($x, $y)) {
+                if (!preg_match("/[#T]/", $point) && !$this->path->isInPath($x, $y)) {
                     $ret = true;
                 }
             }
@@ -296,7 +322,7 @@ while (TRUE)
     );
     $kirk = new Point($KC, $KR);
     $path->addPoint($kirk);
-    $grid = new SimpleGrid($path);
+    $grid = new Grid($path, $C);
     for ($i = 0; $i < $R; $i++)
     {
         fscanf(STDIN, "%s",
