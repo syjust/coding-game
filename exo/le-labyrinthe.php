@@ -107,7 +107,7 @@ class Point extends Obj {
     public $x;
     public $y;
     public function __construct($x, $y) {
-        $this->debug("x:$x,y:$y");
+        //$this->debug("x:$x,y:$y");
         $this->x = $x;
         $this->y = $y;
     }
@@ -177,7 +177,7 @@ class Grid extends Obj {
         }
         $this->debug($space.$cnt.":".$string);
         $row = str_split($string);
-        if (preg_match('/CT/', $string)) {
+        if (preg_match('/[CT]/', $string)) {
             for ($i = 0 ; $i < count($row) ; $i++) {
                 $dot = $row[$i];
                 if ($dot === 'T') {
@@ -233,7 +233,7 @@ class Grid extends Obj {
             $point =  $this->rows[$y][$x];
             $this->debug("$direction?$x,$y:($point)");
             if ($this->endIsInPath()) {
-                if (!preg_match("/[#C]/", $point) && !$this->path->isInPath($x, $y)) {
+                if (!preg_match("/[#C]/", $point)) {
                     $ret = true;
                 }
             } else {
@@ -247,7 +247,8 @@ class Grid extends Obj {
     public function go($direction) {
         echo "{$this->directions[$direction]}\n";
     }
-    public function move($move) {
+    public function move($move, Point $from) {
+        $this->debug("move:$move");
         $moved = false;
         foreach (str_split($move) as $direction) {
             switch($direction) {
@@ -271,12 +272,14 @@ class Grid extends Obj {
         }
     }
     public function goToEnd(Point $from) {
+        $this->debug("from:$from");
         $move = $this->endPoint->diff($from);
-        $this->move($move);
+        $this->move($move, $from);
     }
     public function returnStart(Point $from) {
+        $this->debug("from:$from");
         $move = $this->startPoint->diff($from);
-        $this->move($move);
+        $this->move($move, $from);
     }
 }
 
